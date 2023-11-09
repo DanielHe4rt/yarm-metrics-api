@@ -3,6 +3,7 @@ use scylla::frame::value::Timestamp;
 use serde::Deserialize;
 
 pub mod new_submission;
+pub mod fetch_submission;
 
 
 #[derive(Deserialize, Debug, Clone)]

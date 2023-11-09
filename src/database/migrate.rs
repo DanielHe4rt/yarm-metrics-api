@@ -66,11 +66,12 @@ pub async fn migrate_database(database: &Session) -> Result<(), anyhow::Error> {
     ];
 
     let submissions_queries = vec![
-        String::from("INSERT INTO yarg.song_scores (song_id, user_id, score_id, score, modifiers) VALUES ('black', 'danielhe4rt', '2', 5000, {'brutal-mode', 'all-taps'})"),
-        String::from("INSERT INTO yarg.song_scores (song_id, user_id, score_id, score, modifiers) VALUES ('black', 'kadu', '3', 200000, {'brutal-mode'})"),
-        String::from("INSERT INTO yarg.song_scores (song_id, user_id, score_id, score, modifiers) VALUES ('black', 'kadu', '4', 230000, {'brutal-mode', 'all-taps'});"),
-        String::from("INSERT INTO yarg.song_scores (song_id, user_id, score_id, score, modifiers) VALUES ('black', 'daniel', '5', 100, {'all-taps'});"),
-        String::from("INSERT INTO yarg.song_scores (song_id, user_id, score_id, score, modifiers) VALUES ('black', 'pantas', '1', 10000, {'brutal-mode', 'all-taps'});"), 
+        String::from("
+            INSERT INTO yarg.song_scores 
+                (score_id, song_id, user_id, difficulty, instrument, stars, score, accuracy_percentage, missed_count, ghost_notes_count, max_combo_count, overdrive_count, speed, played_at, modifiers)
+            VALUES
+                ('1', 'fuel', 'danielhe4rt', 'expert+', 'guitar', 5, 1000, 100, 0, 0, 0, 10, 10 , 1699550482 , {'all-taps'})
+        ")
     ];
 
     // Materialized view pra essa porra

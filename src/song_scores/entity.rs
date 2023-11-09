@@ -1,32 +1,11 @@
+use scylla::{FromRow, ValueList, cql_to_rust::FromRowError, QueryResult, IntoTypedRows};
+use serde::Serialize;
 
-
-/*
-table: song_scores 
-* song_id: string (41)
-* season_id: uuid
-* user_id: uuid
-* difficulty: string
-* instrument: string
-* stars: int
-* score: int (10)
-* accuracy_percentage: float 
-* missed_count: int
-* ghost_notes_count: int
-* max_combo_count: int (8)
-* overdrive_count: int(4)
-* speed: int (4)
-* played_at: timestamp
-
-*/
-
-use scylla::{FromRow, ValueList, frame::value::Timestamp};
-use uuid::Uuid;
-
-#[derive(Debug, FromRow, ValueList, Clone)]
+#[derive(Debug, FromRow, ValueList, Clone, Serialize)]
 pub struct SongScore {
+    score_id: String,
     song_id: String,
-    season_id: Uuid,
-    user_id: uuid::Uuid,
+    user_id: String,
     difficulty: String,
     instrument: String,
     stars: i32,
@@ -37,5 +16,13 @@ pub struct SongScore {
     max_combo_count: i32,
     overdrive_count: i32,
     speed: i32,
-    played_at: Timestamp,   
+    played_at: i64,
+    modifiers: Vec<String>,
+}
+
+
+impl SongScore {
+    pub fn fromRow(row: QueryResult) -> Result<SongScore, FromRowError> {
+        row.rows.unwrap().into_typed::<SongScore>().next().unwrap()
+    }
 }

@@ -9,9 +9,9 @@
 - [ ] List of played songs
 - [ ] Add Endpoints
   - [x] POST - /songs/metrics 
+  - [x] GET - /songs/{song_id}
   - [ ] GET - /songs/last-submissions
-  - [ ] GET - /songs/last-submissions
-  - [ ] GET - /leaderboard/songs/{song_id}
+  - [ ] GET - /leaderboard/
   - [ ] GET - /leaderboard/songs/all-time
   - [ ] GET - /leaderboard/players
 
