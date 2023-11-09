@@ -16,9 +16,8 @@ pub async fn new_submission(
 ) -> Json<Value> {
     let repository = SongScoreRepository::new(db);
     
-    println!("payload: {:?}", payload);
 
-    repository.store(request).await;
+    let _ = repository.store(payload).await;
 
     Json(json!({ "data": "ok"}))
 }

@@ -21,7 +21,7 @@ async fn main() {
     // create a scylladb connection
 
     let app = Router::new()
-        .route("/", post(new_submission))
+        .route("/songs/metrics", post(new_submission))
         .layer(Extension(db));
     
     // run it with hyper on localhost:3000

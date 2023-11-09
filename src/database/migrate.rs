@@ -58,27 +58,11 @@ pub async fn migrate_database(database: &Session) -> Result<(), anyhow::Error> {
                     overdrive_count int,
                     speed int,
                     played_at timestamp,
-                    PRIMARY KEY (song_id, user_id, modifiers)   
+                    PRIMARY KEY (score_id)   
                 );",
             ),
         ),
-        (
-            String::from("drop song_scores materialized table"),
-            String::from(
-                "DROP MATERIALIZED VIEW IF EXISTS yarg.song_scores_leaderboard;",
-            ), 
-        ),
-        (
-            String::from("add song_scores materialized table"),
-            String::from(
-                "CREATE MATERIALIZED VIEW IF NOT EXISTS yarg.song_scores_leaderboard AS
-                    SELECT * FROM yarg.song_scores
-                        WHERE song_id IS NOT NULL AND score IS NOT NULL AND user_id IS NOT NULL AND modifiers IS NOT NULL
-                        PRIMARY KEY (user_id, song_id, modifiers, score)
-                        WITH CLUSTERING ORDER BY (score DESC);
-                ",
-            ),
-        ),
+
     ];
 
     let submissions_queries = vec![
