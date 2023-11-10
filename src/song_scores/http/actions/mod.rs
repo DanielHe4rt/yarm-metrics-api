@@ -1,16 +1,20 @@
+use std::str::FromStr;
+
 use chrono::Duration;
 use scylla::frame::value::Timestamp;
 use serde::Deserialize;
+use uuid::{Uuid, Context, Timestamp as UuidTimestamp};
 
 pub mod new_submission;
 pub mod fetch_submission;
+pub mod last_submissions;
 
 
 #[derive(Deserialize, Debug, Clone)]
 pub struct CreateSongScoreRequest {
+    pub submission_id: String,
     pub song_id: String,
     pub user_id: String,
-    pub score_id: String,
     pub difficulty: String,
     pub instrument: String,
     pub stars: i32,
@@ -26,9 +30,9 @@ pub struct CreateSongScoreRequest {
 }
 
 impl CreateSongScoreRequest {
-    pub fn to_database(self) -> (String, String, String, String, String, i32, i32, f32, i32, i32, i32, i32, i32, Timestamp, Vec<String>) {
+    pub fn to_song_score_database(self) -> (Uuid, String, String, String, String, i32, i32, f32, i32, i32, i32, i32, i32, Timestamp, Vec<String>) {
         (
-            self.score_id,
+            Uuid::from_str(self.submission_id.as_str()).unwrap(),
             self.song_id,
             self.user_id,
             self.difficulty,
@@ -43,6 +47,27 @@ impl CreateSongScoreRequest {
             self.speed,
             Timestamp(Duration::seconds(self.played_at as i64)),
             self.modifiers
+        )
+    }
+    /*
+    submission_id timeuuid,
+    song_id text,
+    user_id text,
+    song_name text,
+    charter_name text,
+    country_code text,
+    played_at timestamp,
+     */
+
+    pub fn to_last_played_database(self)  -> (Uuid, String, String, String, String, String, Timestamp) {
+        (
+            Uuid::from_str(self.submission_id.as_str()).unwrap(),
+            self.song_id,
+            self.user_id,
+            String::from("Fodase"),
+            String::from("Fodase"),
+            String::from("Fodase"),
+            Timestamp(Duration::seconds(self.played_at as i64)),
         )
     }
 }

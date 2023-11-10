@@ -3,7 +3,7 @@ use serde::Serialize;
 
 #[derive(Debug, FromRow, ValueList, Clone, Serialize)]
 pub struct SongScore {
-    score_id: String,
+    submission_id: String,
     song_id: String,
     user_id: String,
     difficulty: String,

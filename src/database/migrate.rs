@@ -1,4 +1,5 @@
-use scylla::Session;
+use scylla::{Session, cql_to_rust::FromCqlVal};
+use uuid::{Uuid, Timestamp, Context};
 
 pub async fn migrate_database(database: &Session) -> Result<(), anyhow::Error> {
     /*
@@ -19,6 +20,12 @@ pub async fn migrate_database(database: &Session) -> Result<(), anyhow::Error> {
     * played_at: timestamp
 
     */
+    
+    let context = Context::new(rand::random::<u16>());
+    let now = Timestamp::now(context);
+    let test_uuid = Uuid::new_v1(now, &[1,2,3,4,5,6]);
+    
+    println!("uuid: {}", test_uuid);
 
     let ddl_queries = vec![
         (
@@ -34,18 +41,12 @@ pub async fn migrate_database(database: &Session) -> Result<(), anyhow::Error> {
             ),
         ),
         (
-            String::from("drop song_scores table"),
-            String::from(
-                "DROP TABLE IF EXISTS yarg.song_scores;",
-            ),
-        ),
-        (
             String::from("add song_scores table"),
             String::from(
                 "CREATE TABLE IF NOT EXISTS yarg.song_scores (
+                    submission_id timeuuid,
                     song_id text,
                     user_id text,
-                    score_id text,
                     modifiers frozen<set<text>>,
                     score int,
                     difficulty text,
@@ -58,7 +59,22 @@ pub async fn migrate_database(database: &Session) -> Result<(), anyhow::Error> {
                     overdrive_count int,
                     speed int,
                     played_at timestamp,
-                    PRIMARY KEY (score_id)   
+                    PRIMARY KEY (submission_id)   
+                );",
+            ),
+        ),
+        (
+            String::from("add last_submissions table"),
+            String::from(
+                "CREATE TABLE IF NOT EXISTS yarg.last_submissions (
+                    submission_id timeuuid,
+                    song_id text,
+                    user_id text,
+                    song_name text,
+                    charter_name text,
+                    country_code text,
+                    played_at timestamp,
+                    PRIMARY KEY (submission_id)
                 );",
             ),
         ),
@@ -68,9 +84,27 @@ pub async fn migrate_database(database: &Session) -> Result<(), anyhow::Error> {
     let submissions_queries = vec![
         String::from("
             INSERT INTO yarg.song_scores 
-                (score_id, song_id, user_id, difficulty, instrument, stars, score, accuracy_percentage, missed_count, ghost_notes_count, max_combo_count, overdrive_count, speed, played_at, modifiers)
+                (submission_id, song_id, user_id, difficulty, instrument, stars, score, accuracy_percentage, missed_count, ghost_notes_count, max_combo_count, overdrive_count, speed, played_at, modifiers)
             VALUES
-                ('1', 'fuel', 'danielhe4rt', 'expert+', 'guitar', 5, 1000, 100, 0, 0, 0, 10, 10 , 1699550482 , {'all-taps'})
+                (09758799-7f57-11ee-8f2f-010203040506, 'fuel', 'danielhe4rt', 'expert+', 'guitar', 5, 1000, 100, 0, 0, 0, 10, 10 , 1699550482 , {'all-taps'})
+        "),
+        String::from("
+            INSERT INTO yarg.song_scores 
+                (submission_id, song_id, user_id, difficulty, instrument, stars, score, accuracy_percentage, missed_count, ghost_notes_count, max_combo_count, overdrive_count, speed, played_at, modifiers)
+            VALUES
+                (20e444e3-7f57-11ee-a46e-010203040506, 'break stuff', 'danielhe4rt', 'expert+', 'guitar', 5, 1000, 100, 0, 0, 0, 10, 10 , 1699560482 , {'all-taps'})
+        "),
+        String::from("
+            INSERT INTO yarg.last_submissions 
+                (submission_id, song_id, user_id, song_name, charter_name, country_code, played_at)
+            VALUES
+                (09758799-7f57-11ee-8f2f-010203040506, 'fuel', 'danielhe4rt', 'Fuel', 'Metallica', 'US', 1699550482)
+        "),
+        String::from("
+            INSERT INTO yarg.last_submissions 
+                (submission_id, song_id, user_id, song_name, charter_name, country_code, played_at)
+            VALUES
+                (20e444e3-7f57-11ee-a46e-010203040506, 'break stuff', 'danielhe4rt', 'Break Stuff', 'Limp Bizkit', 'BR', 169964482)
         ")
     ];
 
@@ -85,7 +119,8 @@ pub async fn migrate_database(database: &Session) -> Result<(), anyhow::Error> {
     } 
 
     for query in submissions_queries {
-        database.query(query, []).await?;
+        println!("-> Adding Rows...", );
+        database.query(query, []).await.unwrap();
     }
 
     println!("->............All Good!...........<-");

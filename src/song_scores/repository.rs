@@ -2,18 +2,26 @@ use super::entity::SongScore;
 use super::http::actions::CreateSongScoreRequest;
 use anyhow::Error;
 use scylla::prepared_statement::PreparedStatement;
-use scylla::{IntoTypedRows, Session};
+use scylla::Session;
 use std::sync::Arc;
 
 pub const INSERT_SONG_SCORE: &str = "
     INSERT INTO yarg.song_scores 
-        (score_id, song_id, user_id, difficulty, instrument, stars, score, accuracy_percentage, missed_count, ghost_notes_count, max_combo_count, overdrive_count, speed, played_at, modifiers)
+        (submission_id, song_id, user_id, difficulty, instrument, stars, score, accuracy_percentage, missed_count, ghost_notes_count, max_combo_count, overdrive_count, speed, played_at, modifiers)
         VALUES
         (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ? ,? , ?);
 ";
 
+pub const INSERT_LAST_PLAYED: &str = "
+    INSERT INTO yarg.last_submissions 
+        (submission_id, song_id, user_id, song_name, charter_name, country_code, played_at)
+        VALUES
+        (?, ?, ?, ?, ?, ?, ?);
+";
+
 pub const SELECT_SONG_SCORE_BY_SCORE_ID: &str = "
-    SELECT score_id,
+    SELECT 
+        submission_id,
         song_id,
         user_id,
         difficulty,
@@ -44,10 +52,17 @@ impl SongScoreRepository {
     }
 
     pub async fn store(&self, request: CreateSongScoreRequest) -> Result<(), String> {
-        let prepared_query: PreparedStatement = self.db.prepare(INSERT_SONG_SCORE).await.unwrap();
+        let prepared_song_score_query: PreparedStatement = self.db.prepare(INSERT_SONG_SCORE).await.unwrap();
+        let prepared_last_played_query: PreparedStatement = self.db.prepare(INSERT_LAST_PLAYED).await.unwrap();
         let _ = self
             .db
-            .execute(&prepared_query, request.to_database())
+            .execute(&prepared_song_score_query, request.clone().to_song_score_database())
+            .await
+            .unwrap();
+
+        let _ = self
+            .db
+            .execute(&prepared_last_played_query, request.clone().to_last_played_database())
             .await
             .unwrap();
 
